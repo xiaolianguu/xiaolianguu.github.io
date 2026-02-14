@@ -1,5 +1,15 @@
 [
   {
+    "id": "welcome-to-my-blog-xxx",
+    "title": "欢迎来到我的博客 XXX",
+    "description": "这是我新添加的博客文章，分享我创建这个博客的初衷和未来的计划。",
+    "date": "2026-02-14",
+    "category": "随笔",
+    "tags": ["博客", "新文章", "分享"],
+    "file": "welcome-to-my-blog_xxx.md",
+    "readTime": "3 分钟阅读"
+  },
+  {
     "id": "welcome-to-my-blog",
     "title": "欢迎来到我的博客",
     "description": "这是我博客的第一篇文章，分享我创建这个博客的初衷和未来的计划。",

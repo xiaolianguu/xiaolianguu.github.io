@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="小梁的博客文章">
+    <title id="post-title">文章 | 小梁</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="blog.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/html.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/css.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand">小梁</a>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link">首页</a></li>
+                <li><a href="index.html#about" class="nav-link">关于</a></li>
+                <li><a href="index.html#projects" class="nav-link">项目</a></li>
+                <li><a href="blog.html" class="nav-link active">博客</a></li>
+                <li><a href="index.html#contact" class="nav-link">联系</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <article class="post-page">
+        <div class="container">
+            <div class="post-header">
+                <a href="blog.html" class="back-link">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 12H5M5 12l7 7M5 12l7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回博客
+                </a>
+                <h1 id="article-title" class="post-title">加载中...</h1>
+                <div class="post-meta">
+                    <span class="post-date" id="article-date">-</span>
+                    <span class="post-reading-time" id="reading-time">-</span>
+                </div>
+                <div id="article-tags" class="post-tags"></div>
+            </div>
+            
+            <div class="post-content" id="post-content">
+                <div class="loading">加载文章中...</div>
+            </div>
+            
+            <div class="post-footer">
+                <div class="post-navigation">
+                    <a id="prev-post" class="post-nav-link" style="display: none;">
+                        <span class="nav-label">← 上一篇</span>
+                        <span class="nav-title"></span>
+                    </a>
+                    <a id="next-post" class="post-nav-link" style="display: none;">
+                        <span class="nav-label">下一篇 →</span>
+                        <span class="nav-title"></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 小梁. 用 ❤️ 制作</p>
+            <div class="footer-links">
+                <a href="https://github.com/xiaolianguu" target="_blank">GitHub</a>
+                <a href="blog.html">博客</a>
+                <a href="#">RSS</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 配置 marked
+        marked.setOptions({
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    return hljs.highlight(code, { language: lang }).value;
+                }
+                return hljs.highlightAuto(code).value;
+            },
+            breaks: true,
+            gfm: true
+        });
+
+        // 获取 URL 参数
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        // 计算阅读时间
+        function calculateReadingTime(text) {
+            const wordsPerMinute = 200;
+            const wordCount = text.trim().split(/\s+/).length;
+            const readingTime = Math.ceil(wordCount / wordsPerMinute);
+            return `${readingTime} 分钟阅读`;
+        }
+
+        // 加载文章
+        async function loadPost() {
+            const postId = getQueryParam('id');
+            
+            if (!postId) {
+                document.getElementById('post-content').innerHTML = '<p>未找到文章</p>';
+                return;
+            }
+
+            try {
+                // 加载文章列表获取元数据
+                const postsResponse = await fetch('posts.json');
+                const posts = await postsResponse.json();
+                const post = posts.find(p => p.id === postId);
+                
+                if (!post) {
+                    throw new Error('文章不存在');
+                }
+
+                // 更新元数据
+                document.getElementById('post-title').textContent = `${post.title} | 小梁`;
+                document.getElementById('article-title').textContent = post.title;
+                document.getElementById('article-date').textContent = post.date;
+                
+                // 加载并解析 Markdown
+                const mdResponse = await fetch(`posts/${post.file}`);
+                const markdown = await mdResponse.text();
+                
+                // 更新阅读时间
+                document.getElementById('reading-time').textContent = calculateReadingTime(markdown);
+                
+                // 转换 Markdown 为 HTML
+                const html = marked.parse(markdown);
+                document.getElementById('post-content').innerHTML = html;
+                
+                // 显示标签
+                if (post.tags && post.tags.length > 0) {
+                    const tagsHtml = post.tags.map(tag => 
+                        `<span class="tag-small">${tag}</span>`
+                    ).join('');
+                    document.getElementById('article-tags').innerHTML = tagsHtml;
+                }
+                
+                // 设置上一篇/下一篇
+                const currentIndex = posts.findIndex(p => p.id === postId);
+                if (currentIndex > 0) {
+                    const prevPost = posts[currentIndex - 1];
+                    const prevLink = document.getElementById('prev-post');
+                    prevLink.href = `post.html?id=${prevPost.id}`;
+                    prevLink.querySelector('.nav-title').textContent = prevPost.title;
+                    prevLink.style.display = 'flex';
+                }
+                if (currentIndex < posts.length - 1) {
+                    const nextPost = posts[currentIndex + 1];
+                    const nextLink = document.getElementById('next-post');
+                    nextLink.href = `post.html?id=${nextPost.id}`;
+                    nextLink.querySelector('.nav-title').textContent = nextPost.title;
+                    nextLink.style.display = 'flex';
+                }
+                
+            } catch (error) {
+                console.error('加载文章失败:', error);
+                document.getElementById('post-content').innerHTML = 
+                    '<p class="error">抱歉，文章加载失败。请稍后再试。</p>';
+            }
+        }
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', loadPost);
+    </script>
+</body>
+</html>
